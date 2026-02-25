@@ -1,0 +1,134 @@
+# =============================================================================
+# CMSeg-Net - Copy-Move Forgery Detection
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Experiment Settings
+# -----------------------------------------------------------------------------
+experiment:
+  name: "cmsegnet_forgery_detection"
+  seed: 42
+  work_dir: "./work_dir"
+  device: "cuda"
+  gpu_id: 0
+
+# -----------------------------------------------------------------------------
+# Data Settings
+# -----------------------------------------------------------------------------
+data:
+  data_root: "../input"
+  train_images_dir: "train/images"
+  train_masks_dir: "train/masks"
+  val_images_dir: "val/images"
+  val_masks_dir: "val/masks"
+  test_images_dir: "test/images"
+  test_masks_dir: "test/masks"
+  image_size: 512
+  num_workers: 8
+  pin_memory: true
+  include_authentic: true
+  max_samples_train: null
+  max_samples_val: null
+
+# -----------------------------------------------------------------------------
+# Model Settings
+# -----------------------------------------------------------------------------
+model:
+  pretrained_mobilenet: null
+  pretrained_cmsegnet: "./model/generalization.pth"
+  topk_corr16: 16
+  topk_corr24: 24
+  topk_corr32: 32
+  topk_corr96: 96
+  aspp_rates: [4, 8, 12, 16]
+
+# -----------------------------------------------------------------------------
+# Loss Settings
+# -----------------------------------------------------------------------------
+# Tversky Loss : alpha = poids FP, beta = poids FN
+# pos_weight : pénalité sur les faux négatifs dans BCE
+# -----------------------------------------------------------------------------
+loss:
+  type: "mixed"
+  bce_weight: 0.5
+  dice_weight: 0.5
+  tversky_weight: 0.0
+  pos_weight: 1.0
+  tversky_alpha: 0.2
+  tversky_beta: 0.8
+
+# -----------------------------------------------------------------------------
+# Training Settings
+# -----------------------------------------------------------------------------
+training:
+  num_epochs: 100
+  batch_size: 8
+  gradient_accumulation_steps: 1
+  learning_rate: 0.0001
+  optimizer: "adam"
+  weight_decay: 0.001
+  scheduler:
+    enabled: true
+    type: "plateau"
+    mode: "max"
+    factor: 0.5
+    patience: 5
+    min_lr: 0.000001
+  grad_clip_norm: 1
+  use_amp: true
+  use_ema: true
+  ema_decay: 0.999
+  freeze_backbone: false
+  unfreeze_epoch: 5
+  val_every: 1
+  early_stopping:
+    enabled: true
+    patience: 20
+    min_delta: 0.001
+    metric: "val_oF1"
+    mode: "max"
+  save_every: 0
+  resume_checkpoint: ""
+
+# -----------------------------------------------------------------------------
+# Data Augmentation Settings
+# -----------------------------------------------------------------------------
+augmentation:
+  horizontal_flip: false
+  vertical_flip: false
+  random_noise:
+    enabled: false
+    noise_level: 0.15
+    probability: 0.1
+  extended:
+    enabled: false
+    rotation: false
+    rotation_limit: 15
+    jpeg_compression: true
+    jpeg_quality_min: 50
+    blur: true
+    brightness_contrast: true
+
+# -----------------------------------------------------------------------------
+# Inference Settings
+# -----------------------------------------------------------------------------
+inference:
+  threshold: [0.2, 0.3, 0.4, 0.5, 0.6, 0.8]
+  min_area: [50, 100]
+
+# -----------------------------------------------------------------------------
+# Evaluation Settings
+# -----------------------------------------------------------------------------
+evaluation:
+  compute_oF1: true
+  threshold: 0.5
+  min_area: 100
+
+# -----------------------------------------------------------------------------
+# Logging Settings
+# -----------------------------------------------------------------------------
+logging:
+  log_every: 10
+  verbose: true
+  save_predictions: false
+  num_vis_samples: 5

@@ -1,0 +1,96 @@
+augmentation:
+  extended:
+    blur: true
+    brightness_contrast: true
+    enabled: true
+    jpeg_compression: true
+    jpeg_quality_min: 50
+    rotation: true
+    rotation_limit: 15
+  horizontal_flip: true
+  random_noise:
+    enabled: true
+    noise_level: 0.15
+    probability: 0.1
+  vertical_flip: true
+data:
+  data_root: ../input
+  image_size: 512
+  include_authentic: true
+  max_samples_train: null
+  max_samples_val: null
+  num_workers: 8
+  pin_memory: true
+  test_images_dir: test/images
+  test_masks_dir: test/masks
+  train_images_dir: train/images
+  train_masks_dir: train/masks
+  val_images_dir: val/images
+  val_masks_dir: val/masks
+evaluation:
+  compute_oF1: true
+  min_area: 100
+  threshold: 0.5
+experiment:
+  device: cuda
+  gpu_id: 0
+  name: cmsegnet_forgery_detection
+  seed: 42
+  work_dir: ./work_dir
+inference:
+  min_area: 50
+  threshold: 0.5
+logging:
+  log_every: 10
+  num_vis_samples: 5
+  save_predictions: false
+  verbose: true
+loss:
+  bce_weight: 0.5
+  dice_weight: 0.5
+  pos_weight: 1.0
+  tversky_alpha: 0.2
+  tversky_beta: 0.8
+  tversky_weight: 0.0
+  type: mixed
+model:
+  aspp_rates:
+  - 4
+  - 8
+  - 12
+  - 16
+  pretrained_cmsegnet: ./model/generalization.pth
+  pretrained_mobilenet: null
+  topk_corr16: 16
+  topk_corr24: 24
+  topk_corr32: 32
+  topk_corr96: 96
+training:
+  batch_size: 8
+  early_stopping:
+    enabled: true
+    metric: val_oF1
+    min_delta: 0.001
+    mode: max
+    patience: 20
+  ema_decay: 0.999
+  freeze_backbone: false
+  grad_clip_norm: 1
+  gradient_accumulation_steps: 1
+  lr: 0.0001
+  num_epochs: 100
+  optimizer: adam
+  resume_checkpoint: ''
+  save_every: 0
+  scheduler:
+    enabled: true
+    factor: 0.5
+    min_lr: 1.0e-06
+    mode: max
+    patience: 5
+    type: plateau
+  unfreeze_epoch: 5
+  use_amp: true
+  use_ema: true
+  val_every: 1
+  weight_decay: 0.0001
