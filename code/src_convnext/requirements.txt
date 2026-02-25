@@ -1,0 +1,24 @@
+# ConvNeXt-UNET Requirements
+# Image Forgery Detection with ConvNeXt + UNET
+
+# PyTorch (install according to your CUDA version from pytorch.org)
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Core dependencies
+numpy>=1.21.0
+opencv-python>=4.5.0
+Pillow>=8.0.0
+scipy>=1.7.0
+matplotlib>=3.4.0
+tqdm>=4.60.0
+pyyaml>=5.4.0
+
+# Data augmentation
+albumentations>=1.3.0
+
+# Model library for ConvNeXt
+timm>=0.9.0
+
+# Optional: TensorBoard for logging
+tensorboard>=2.10.0

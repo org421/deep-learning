@@ -1,0 +1,132 @@
+# =============================================================================
+# ConvNeXt-UNET - Scientific Image Forgery Detection
+# =============================================================================
+# Configuration pour le projet Master DSC - Kaggle Competition
+# Detection et segmentation de regions falsifiees avec ConvNeXt + UNET
+
+# -----------------------------------------------------------------------------
+# Experiment Settings
+# -----------------------------------------------------------------------------
+experiment:
+  name: "convnext_unet_forgery_detection"
+  seed: 42
+  work_dir: "./work_dir"
+  device: "cuda"
+  gpu_id: 0
+
+# -----------------------------------------------------------------------------
+# Data Settings
+# -----------------------------------------------------------------------------
+data:
+  data_root: "../data"
+  train_csv: "train.csv"
+  val_csv: "val.csv"
+  test_csv: "test.csv"
+  train_images_dir: "train/images"
+  train_masks_dir: "train/masks"
+  val_images_dir: "val/images"
+  val_masks_dir: "val/masks"
+  test_images_dir: "test/images"
+  test_masks_dir: "test/masks"
+  image_size: 512
+  num_workers: 3
+  pin_memory: true
+  include_authentic: true
+  max_images_per_class: null
+  max_samples_train: null
+  max_samples_val: null
+  max_samples_test: null
+
+# -----------------------------------------------------------------------------
+# Model Settings - ConvNeXt + UNET
+# -----------------------------------------------------------------------------
+model:
+  backbone: "convnext_base"
+  pretrained: true
+  decoder_channels: [256, 128, 64, 32]
+  num_groups: 8
+  freeze_backbone: true
+  freeze_backbone_epochs: 5
+
+# -----------------------------------------------------------------------------
+# Loss Settings
+# -----------------------------------------------------------------------------
+loss:
+  type: "combined"
+  bce:
+    enabled: true
+    weight: 1.0
+    use_ilw: true
+    ilw_max_weight: 10.0
+    ilw_min_weight: 0.1
+  dice:
+    enabled: true
+    weight: 1.0
+    smooth: 1.0
+  focal:
+    enabled: false
+    weight: 1.0
+    alpha: 0.25
+    gamma: 2.0
+  lambda_pred_score: 0.05
+  ignore_label: -1
+
+# -----------------------------------------------------------------------------
+# Training Settings
+# -----------------------------------------------------------------------------
+training:
+  num_epochs: 150
+  batch_size: 8
+  gradient_accumulation_steps: 2
+  lr: 0.0001
+  weight_decay: 0.001
+  backbone_lr_multiplier: 0.1
+  scheduler:
+    type: "cosine_warm_restarts"
+    T_0: 15
+    T_mult: 2
+    eta_min: 0.000001
+  resume_checkpoint: ""
+  val_every: 1
+  use_amp: true
+  use_ema: true
+  ema_decay: 0.999
+  grad_clip_norm: 1.0
+  early_stopping:
+    enabled: true
+    patience: 25
+    min_delta: 0.0001
+    metric: "val_oF1"
+    mode: "max"
+
+# -----------------------------------------------------------------------------
+# Data Augmentation Settings
+# -----------------------------------------------------------------------------
+augmentation:
+  type: 2
+  crop_prob: 0
+  resize_mode: null
+
+# -----------------------------------------------------------------------------
+# Inference Settings
+# -----------------------------------------------------------------------------
+inference:
+  threshold: 0.5
+  min_area: 100
+
+# -----------------------------------------------------------------------------
+# Evaluation Settings (oF1 metric)
+# -----------------------------------------------------------------------------
+evaluation:
+  compute_oF1: true
+  oF1:
+    threshold: 0.5
+    min_area: 100
+
+# -----------------------------------------------------------------------------
+# Logging Settings
+# -----------------------------------------------------------------------------
+logging:
+  tensorboard: true
+  log_every: 10
+  verbose: true
