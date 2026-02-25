@@ -1,0 +1,112 @@
+# Config pour le projet M2 DSC - Detection de falsification avec DinoV3 + DPT
+
+# --- Experiment ---
+experiment:
+  name: "dinov3_dpt_forgery_detection"
+  seed: 42
+  work_dir: "./work_dir"
+  device: "cuda"
+  gpu_id: 0
+
+# --- Donnees ---
+data:
+  data_root: "../input"
+  train_csv: "train.csv"
+  val_csv: "val.csv"
+  test_csv: "test.csv"
+  train_images_dir: "train/images"
+  train_masks_dir: "train/masks"
+  val_images_dir: "val/images"
+  val_masks_dir: "val/masks"
+  test_images_dir: "test/images"
+  test_masks_dir: "test/masks"
+  image_size: 512          # doit etre divisible par 16 (patch_size)
+  num_workers: 4
+  pin_memory: true
+  include_authentic: true
+  max_images_per_class: null
+  max_samples_train: null
+  max_samples_val: null
+  max_samples_test: null
+
+# --- Modele DinoV3 + DPT ---
+model:
+  type: "dpt"
+  backbone: "dinov3_vitb16"   # on utilise ViT-Base
+  weights_path: "model/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
+  decoder_channels: 256
+  dropout_ratio: 0.1
+  num_groups: 8
+  freeze_backbone: true
+  freeze_backbone_epochs: 10
+
+# --- Losses ---
+loss:
+  type: "combined"
+  bce:
+    enabled: true
+    weight: 1.0
+    use_ilw: true             # ponderation inverse pour le desequilibre de classes
+    ilw_max_weight: 10.0
+    ilw_min_weight: 0.1
+  dice:
+    enabled: true
+    weight: 1.0
+    smooth: 1.0
+  focal:
+    enabled: true
+    weight: 1.0
+    alpha: 0.75               # plus de poids sur la classe forgee
+    gamma: 2.0
+  lambda_pred_score: 0.05
+  ignore_label: -1
+
+# --- Entrainement ---
+training:
+  num_epochs: 150
+  batch_size: 16
+  gradient_accumulation_steps: 1
+  lr: 0.001
+  weight_decay: 0.01
+  backbone_lr_multiplier: 0.01   # lr backbone = lr * 0.01
+  scheduler:
+    type: "cosine_warm_restarts"
+    T_0: 20
+    T_mult: 2
+    eta_min: 0.000001
+  resume_checkpoint: ""
+  val_every: 1
+  use_amp: true
+  use_ema: true
+  ema_decay: 0.999
+  grad_clip_norm: 1.0
+  early_stopping:
+    enabled: true
+    patience: 30
+    min_delta: 0.0001
+    metric: "val_oF1"
+    mode: "max"
+
+# --- Augmentation ---
+augmentation:
+  type: 2
+  crop_prob: 0
+  resize_mode: null
+
+# --- Inference ---
+inference:
+  threshold: 0.5
+  min_area: 100
+
+# --- Evaluation (metrique oF1 Kaggle) ---
+evaluation:
+  compute_oF1: true
+  oF1:
+    threshold: 0.5
+    min_area: 100
+
+# --- Logging ---
+logging:
+  tensorboard: true
+  log_every: 10
+  verbose: true
