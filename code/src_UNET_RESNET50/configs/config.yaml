@@ -1,0 +1,131 @@
+# =============================================================================
+# DinoV2-UNET - Configuration OPTIMISÉE pour oF1 et forged_oF1
+# =============================================================================
+# Configuration optimisée pour maximiser les scores oF1 et forged_oF1
+# Changements principaux : Focal Loss activé, poids ajustés, LR optimisé,
+# decoder plus profond, augmentations renforcées
+
+# -----------------------------------------------------------------------------
+# Experiment Settings
+# -----------------------------------------------------------------------------
+experiment:
+  name: "resnet50_unet_forgery_tolga"
+  seed: 42
+  work_dir: "./work_dir_optimized_tolga"
+  device: "cuda"
+  gpu_id: 0
+
+# -----------------------------------------------------------------------------
+# Data Settings
+# -----------------------------------------------------------------------------
+data:
+  data_root: "../data"
+  train_csv: "train.csv"
+  val_csv: "val.csv"
+  test_csv: "test.csv"
+  train_images_dir: "train/images"
+  train_masks_dir: "train/masks"
+  val_images_dir: "val/images"
+  val_masks_dir: "val/masks"
+  test_images_dir: "test/images"
+  test_masks_dir: "test/masks"
+  image_size: 518
+  num_workers: 4
+  pin_memory: true
+  include_authentic: true
+  max_images_per_class: null
+  max_samples_train: null
+  max_samples_val: null
+  max_samples_test: null
+
+# -----------------------------------------------------------------------------
+# Model Settings - ResNet50 + UNET
+# -----------------------------------------------------------------------------
+model:
+  backbone: "resnet50"
+  pretrained: true
+  decoder_channels: [512, 256, 128, 64, 32]  # Decoder plus profond pour meilleurs détails
+  freeze_backbone: true
+  freeze_backbone_epochs: 10  # Plus d'époques pour stabiliser le decoder
+
+# -----------------------------------------------------------------------------
+# Loss Settings - OPTIMISÉ pour oF1
+# -----------------------------------------------------------------------------
+loss:
+  type: "combined"
+  bce:
+    enabled: true
+    weight: 0.8  # Réduit pour équilibrer avec Focal
+    use_ilw: true
+    ilw_max_weight: 15.0  # Augmenté pour pénaliser plus les erreurs
+    ilw_min_weight: 0.1
+  dice:
+    enabled: true
+    weight: 1.2  # Augmenté car directement lié à F1/IoU
+    smooth: 1.0
+  focal:
+    enabled: true  # ACTIVÉ - crucial pour déséquilibre de classes
+    weight: 1.5    # Poids fort pour focus sur pixels difficiles
+    alpha: 0.75    # Augmenté pour plus focus sur classe positive
+    gamma: 3.0     # Augmenté pour pénaliser fortement faux négatifs
+  lambda_pred_score: 0.1  # Augmenté si score de prédiction disponible
+  ignore_label: -1
+
+# -----------------------------------------------------------------------------
+# Training Settings - OPTIMISÉ
+# -----------------------------------------------------------------------------
+training:
+  num_epochs: 200  # Plus d'époques pour meilleure convergence
+  batch_size: 6    # Réduit pour stabilité
+  gradient_accumulation_steps: 6  # Augmenté (batch effectif = 36)
+  lr: 0.0001  # Augmenté pour apprentissage plus rapide
+  weight_decay: 0.0005  # Réduit pour éviter sous-apprentissage
+  backbone_lr_multiplier: 0.05  # Réduit pour stabilité backbone pré-entraîné
+  scheduler:
+    type: "cosine_warm_restarts"
+    T_0: 10  # Restarts plus fréquents pour échapper minima locaux
+    T_mult: 1  # Restarts réguliers
+    eta_min: 0.0000005  # LR min plus bas pour fine-tuning
+  resume_checkpoint: ""
+  val_every: 1
+  use_amp: true
+  use_ema: true
+  ema_decay: 0.9995  # Légèrement augmenté pour moyenne plus stable
+  grad_clip_norm: 1.0
+  early_stopping:
+    enabled: true
+    patience: 25  # Plus de patience pour convergence complète
+    min_delta: 0.00005  # Delta plus petit pour détecter petites améliorations
+    metric: "val_oF1"
+    mode: "max"
+
+# -----------------------------------------------------------------------------
+# Data Augmentation Settings - RENFORCÉ
+# -----------------------------------------------------------------------------
+augmentation:
+  type: 2  # Noise + Geometric
+  crop_prob: 0.0  # Augmenté pour plus de variabilité spatiale
+
+# -----------------------------------------------------------------------------
+# Inference Settings - NE PAS MODIFIER
+# -----------------------------------------------------------------------------
+inference:
+  threshold: 0.5
+  min_area: 100
+
+# -----------------------------------------------------------------------------
+# Evaluation Settings (oF1 metric) - NE PAS MODIFIER
+# -----------------------------------------------------------------------------
+evaluation:
+  compute_oF1: true
+  oF1:
+    threshold: 0.5
+    min_area: 100
+
+# -----------------------------------------------------------------------------
+# Logging Settings
+# -----------------------------------------------------------------------------
+logging:
+  tensorboard: true
+  log_every: 10
+  verbose: true
