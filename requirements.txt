@@ -1,0 +1,46 @@
+# --- Core Deep Learning ---
+torch>=2.0.0
+torchvision>=0.15.0
+
+# --- Segmentation Models (UNET-ResNet) ---
+segmentation-models-pytorch>=0.3.3
+
+# --- Image Processing ---
+opencv-python>=4.5.0
+Pillow>=8.0.0
+albumentations>=1.3.0
+
+# --- Scientific Computing ---
+numpy>=1.21.0
+scipy>=1.7.0
+scikit-learn>=1.0.0
+
+# --- Configuration & Serialization ---
+PyYAML>=5.4.0
+
+# --- Visualization & Logging ---
+matplotlib>=3.4.0
+tensorboard>=2.10.0
+
+# --- Progress Bars ---
+tqdm>=4.60.0
+
+# Model library for ConvNeXt
+timm>=0.9.0
+
+# --- Transformers / ViT ---
+transformers>=4.38.0
+einops>=0.7.0
+huggingface-hub>=0.20.0
+
+# --- Advanced vision backbones ---
+fvcore>=0.1.5
+iopath>=0.1.10
+
+# --- Training acceleration ---
+accelerate>=0.27.0
+packaging>=23.0
+
+# --- Optional (GPU optimization) ---
+xformers>=0.0.25
+
